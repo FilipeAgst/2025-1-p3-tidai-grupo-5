@@ -115,3 +115,120 @@ app.listen(port, () => {
 })
 
 
+
+
+
+
+
+
+
+
+// CREATE - Criar nova playlist
+app.post('/playlists', async (req, res) => {
+  const {
+    id_usuario,
+    nome_playlist,
+    descricao_playlist,
+    categoria_playlist,
+    tag_playlist,
+    prioridade,
+    data_conclusao,
+    visibilidade
+  } = req.body
+
+  try {
+    const novaPlaylist = await sql`
+      INSERT INTO playlist (
+        id_usuario, nome_playlist, descricao_playlist,
+        categoria_playlist, tag_playlist, prioridade,
+        data_conclusao, visibilidade
+      ) VALUES (
+        ${id_usuario}, ${nome_playlist}, ${descricao_playlist},
+        ${categoria_playlist}, ${tag_playlist}, ${prioridade},
+        ${data_conclusao}, ${visibilidade}
+      ) RETURNING *
+    `
+    res.status(201).json(novaPlaylist[0])
+  } catch (error) {
+    res.status(500).json({ error: error.message })
+  }
+})
+
+// READ - Listar todas as playlists
+app.get('/playlists', async (req, res) => {
+  try {
+    const playlists = await sql`SELECT * FROM playlist`
+    res.json(playlists)
+  } catch (error) {
+    res.status(500).json({ error: error.message })
+  }
+})
+
+// READ - Buscar uma playlist por ID
+app.get('/playlists/:id', async (req, res) => {
+  const { id } = req.params
+  try {
+    const playlist = await sql`SELECT * FROM playlist WHERE id_playlist = ${id}`
+    if (playlist.length === 0) {
+      return res.status(404).json({ error: 'Playlist não encontrada' })
+    }
+    res.json(playlist[0])
+  } catch (error) {
+    res.status(500).json({ error: error.message })
+  }
+})
+
+// UPDATE - Atualizar uma playlist
+app.put('/playlists/:id', async (req, res) => {
+  const { id } = req.params
+  const {
+    id_usuario,
+    nome_playlist,
+    descricao_playlist,
+    categoria_playlist,
+    tag_playlist,
+    prioridade,
+    data_conclusao,
+    visibilidade
+  } = req.body
+
+  try {
+    const atualizada = await sql`
+      UPDATE playlist SET
+        id_usuario = ${id_usuario},
+        nome_playlist = ${nome_playlist},
+        descricao_playlist = ${descricao_playlist},
+        categoria_playlist = ${categoria_playlist},
+        tag_playlist = ${tag_playlist},
+        prioridade = ${prioridade},
+        data_conclusao = ${data_conclusao},
+        visibilidade = ${visibilidade}
+      WHERE id_playlist = ${id}
+      RETURNING *
+    `
+    if (atualizada.length === 0) {
+      return res.status(404).json({ error: 'Playlist não encontrada' })
+    }
+    res.json(atualizada[0])
+  } catch (error) {
+    res.status(500).json({ error: error.message })
+  }
+})
+
+// DELETE - Deletar uma playlist
+app.delete('/playlists/:id', async (req, res) => {
+  const { id } = req.params
+  try {
+    const deletada = await sql`DELETE FROM playlist WHERE id_playlist = ${id} RETURNING *`
+    if (deletada.length === 0) {
+      return res.status(404).json({ error: 'Playlist não encontrada' })
+    }
+    res.json({ message: 'Playlist deletada com sucesso' })
+  } catch (error) {
+    res.status(500).json({ error: error.message })
+  }
+})
+
+
+
+
